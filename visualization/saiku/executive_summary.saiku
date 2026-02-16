@@ -1,0 +1,53 @@
+{
+    "queryname": "Executive Revenue Summary",
+    "cube": {
+        "uniqueName": "[SalesCube]",
+        "name": "SalesCube",
+        "connection": "ecommerce_bi_olap",
+        "catalog": "SalesCube",
+        "schema": "EcommerceCube"
+    },
+    "mdx": "SELECT NON EMPTY {Hierarchize({[Measures].[Revenue], [Measures].[Order_Count], [Measures].[Avg_Basket]})} ON COLUMNS, NON EMPTY {Hierarchize({[Time].[Time].[Year].Members})} ON ROWS FROM [SalesCube]",
+    "type": "QUERY",
+    "queryModel": {
+        "axes": {
+            "FILTER": {
+                "mdx": null,
+                "filters": [],
+                "sortOrder": null,
+                "sortEvaluationLiteral": null,
+                "hierarchizeMode": null,
+                "location": "FILTER",
+                "aggregators": []
+            },
+            "COLUMNS": {
+                "mdx": "{Hierarchize({[Measures].[Revenue], [Measures].[Order_Count], [Measures].[Avg_Basket]})}",
+                "filters": [],
+                "sortOrder": null,
+                "sortEvaluationLiteral": null,
+                "hierarchizeMode": null,
+                "location": "COLUMNS",
+                "aggregators": []
+            },
+            "ROWS": {
+                "mdx": "{Hierarchize({[Time].[Time].[Year].Members})}",
+                "filters": [],
+                "sortOrder": null,
+                "sortEvaluationLiteral": null,
+                "hierarchizeMode": null,
+                "location": "ROWS",
+                "aggregators": []
+            }
+        },
+        "visuals": {
+             "chartType": "Bar",
+             "properties": {
+                 "color": "Automatic"
+             }
+        }
+    },
+    "metadata": {
+        "created_by": "admin",
+        "created_date": "2026-02-16"
+    }
+}

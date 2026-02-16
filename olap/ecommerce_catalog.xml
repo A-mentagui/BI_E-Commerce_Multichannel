@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Schema name="EcommerceBIOLAP">
+  <Cube name="SalesCube" visible="true" cache="true" enabled="true" defaultMeasure="Revenue">
+    <Table name="vw_fact_orders_olap"/>
+
+    <Dimension type="TimeDimension" name="Time" foreignKey="timekey">
+      <Hierarchy name="TimeHierarchy" hasAll="true" allMemberName="All Time">
+        <Table name="dim_time"/>
+        <Level name="Year" column="year" type="Numeric" levelType="TimeYears" uniqueMembers="false"/>
+        <Level name="Quarter" column="quarter" type="Numeric" levelType="TimeQuarters" uniqueMembers="false"/>
+        <Level name="Month" column="monthname" type="String" levelType="TimeMonths" uniqueMembers="false"/>
+        <Level name="Day" column="dayofweek" type="Numeric" levelType="TimeDays" uniqueMembers="false"/>
+      </Hierarchy>
+    </Dimension>
+
+    <Dimension name="Product" foreignKey="productkey">
+      <Hierarchy name="ProductHierarchy" hasAll="true" allMemberName="All Products" primaryKey="productkey">
+        <Table name="dim_product"/>
+        <Level name="Category" column="category" type="String" uniqueMembers="false"/>
+        <Level name="SubCategory" column="subcategory" type="String" uniqueMembers="false"/>
+        <Level name="Product" column="productname" type="String" uniqueMembers="true"/>
+      </Hierarchy>
+    </Dimension>
+
+    <Dimension name="Channel" foreignKey="channelkey">
+      <Hierarchy name="ChannelHierarchy" hasAll="true" allMemberName="All Channels" primaryKey="channelkey">
+        <Table name="dim_channel"/>
+        <Level name="ChannelType" column="channeltype" type="String" uniqueMembers="false"/>
+        <Level name="Channel" column="channelname" type="String" uniqueMembers="true"/>
+      </Hierarchy>
+    </Dimension>
+
+    <Dimension name="Customer" foreignKey="customerkey">
+      <Hierarchy name="CustomerHierarchy" hasAll="true" allMemberName="All Customers" primaryKey="customerkey">
+        <Table name="dim_customer"/>
+        <Level name="Segment" column="segment" type="String" uniqueMembers="false"/>
+        <Level name="Country" column="country" type="String" uniqueMembers="false"/>
+        <Level name="City" column="city" type="String" uniqueMembers="false"/>
+        <Level name="Customer" column="customername" type="String" uniqueMembers="false"/>
+      </Hierarchy>
+    </Dimension>
+
+    <Dimension name="Region" foreignKey="regionkey">
+      <Hierarchy name="RegionHierarchy" hasAll="true" allMemberName="All Regions" primaryKey="regionkey">
+        <Table name="dim_region"/>
+        <Level name="Region" column="regionname" type="String" uniqueMembers="true"/>
+      </Hierarchy>
+    </Dimension>
+
+    <Dimension name="Delivery" foreignKey="deliverykey">
+      <Hierarchy name="DeliveryHierarchy" hasAll="true" allMemberName="All Delivery" primaryKey="deliverykey">
+        <Table name="dim_delivery"/>
+        <Level name="Delivery" column="deliverymethod" type="String" uniqueMembers="true"/>
+      </Hierarchy>
+    </Dimension>
+
+    <Measure name="Revenue" column="revenue" aggregator="sum" formatString="#,##0.00"/>
+    <Measure name="Quantity" column="quantity" aggregator="sum" formatString="#,##0"/>
+    <Measure name="UnitPrice" column="unitprice" aggregator="avg" formatString="#,##0.00"/>
+    <Measure name="Discount" column="discount" aggregator="sum" formatString="#,##0.00"/>
+    <Measure name="Order_Count" column="order_id" aggregator="count" formatString="#,##0"/>
+    <Measure name="Return_Count" column="return_count" aggregator="sum" formatString="#,##0"/>
+    <Measure name="Refund_Amount" column="refund_amount" aggregator="sum" formatString="#,##0.00"/>
+    <Measure name="Feedback_Count" column="feedback_count" aggregator="sum" formatString="#,##0"/>
+    <Measure name="Satisfaction_Sum" column="satisfaction_sum" aggregator="sum" formatString="#,##0.0"/>
+    <Measure name="Unique_Customers" column="customerkey" aggregator="distinct-count" formatString="#,##0"/>
+
+    <CalculatedMember name="Satisfaction" dimension="Measures"
+      formula="IIF([Measures].[Feedback_Count] = 0, NULL, [Measures].[Satisfaction_Sum] / [Measures].[Feedback_Count])"
+      formatString="#,##0.0"/>
+    <CalculatedMember name="Avg_Basket" dimension="Measures"
+      formula="IIF([Measures].[Order_Count] = 0, NULL, [Measures].[Revenue] / [Measures].[Order_Count])"
+      formatString="#,##0.00"/>
+    <CalculatedMember name="Discount_Rate_Pct" dimension="Measures"
+      formula="IIF([Measures].[Revenue] = 0, NULL, ([Measures].[Discount] / [Measures].[Revenue]) * 100)"
+      formatString="#,##0.00"/>
+    <CalculatedMember name="Return_Rate_Pct" dimension="Measures"
+      formula="IIF([Measures].[Order_Count] = 0, NULL, ([Measures].[Return_Count] / [Measures].[Order_Count]) * 100)"
+      formatString="#,##0.00"/>
+    <CalculatedMember name="Net_Revenue" dimension="Measures"
+      formula="[Measures].[Revenue] - [Measures].[Refund_Amount]"
+      formatString="#,##0.00"/>
+
+    <NamedSet name="Top10ProductsByRevenue"
+      formula="TopCount([Product].[ProductHierarchy].[Product].Members, 10, [Measures].[Revenue])"/>
+    <NamedSet name="TopRegionsByRevenue"
+      formula="TopCount([Region].[RegionHierarchy].[Region].Members, 5, [Measures].[Revenue])"/>
+  </Cube>
+</Schema>

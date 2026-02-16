@@ -1,0 +1,129 @@
+
+services:
+  mysql:
+    image: mysql:8.0
+    profiles: ["mysql"]
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root_password}
+      MYSQL_DATABASE: ${STACK_DB_NAME:-ecommerce_bi}
+      MYSQL_USER: ${STACK_DB_USER:-bi_user}
+      MYSQL_PASSWORD: ${STACK_DB_PASSWORD:-bi_password}
+    ports:
+      - "${STACK_MYSQL_PORT:-3306}:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./sql/setup_database.sql:/docker-entrypoint-initdb.d/01-setup_database.sql:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-u", "root", "-p${MYSQL_ROOT_PASSWORD:-root_password}"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+
+  postgres:
+    image: postgres:16
+    profiles: ["postgres"]
+    environment:
+      POSTGRES_DB: ${STACK_DB_NAME:-ecommerce_bi}
+      POSTGRES_USER: ${STACK_DB_USER:-bi_user}
+      POSTGRES_PASSWORD: ${STACK_DB_PASSWORD:-bi_password}
+    ports:
+      - "${STACK_POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./sql/setup_database_postgres.sql:/docker-entrypoint-initdb.d/01-setup_database_postgres.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${STACK_DB_USER:-bi_user} -d ${STACK_DB_NAME:-ecommerce_bi}"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+
+  saiku:
+    build:
+      context: ./docker/saiku
+      args:
+        SAIKU_VERSION: ${SAIKU_VERSION:-3.17}
+        SAIKU_DOWNLOAD_URL: ${SAIKU_DOWNLOAD_URL:-https://downloads.sourceforge.net/project/saiku/saiku-server/saiku-server-3.17.zip}
+        MYSQL_JDBC_URL: ${MYSQL_JDBC_URL:-https://repo1.maven.org/maven2/com/mysql/mysql-connector-j/8.4.0/mysql-connector-j-8.4.0.jar}
+        POSTGRES_JDBC_URL: ${POSTGRES_JDBC_URL:-https://repo1.maven.org/maven2/org/postgresql/postgresql/42.7.4/postgresql-42.7.4.jar}
+    environment:
+      DB_TYPE: ${STACK_DB_TYPE:-mysql}
+      DB_NAME: ${STACK_DB_NAME:-ecommerce_bi}
+      DB_USER: ${STACK_DB_USER:-bi_user}
+      DB_PASSWORD: ${STACK_DB_PASSWORD:-bi_password}
+      DB_HOST_MYSQL: mysql
+      DB_PORT_MYSQL: 3306
+      DB_HOST_POSTGRES: postgres
+      DB_PORT_POSTGRES: 5432
+      CATALOG_PATH: /workspace/olap/ecommerce_catalog.xml
+    ports:
+      - "${STACK_SAIKU_PORT:-8080}:8080"
+    volumes:
+      - ./:/workspace:ro
+
+  pdi:
+    build:
+      context: ./docker/pdi
+      args:
+        PDI_VERSION: ${PDI_VERSION:-9.4.0.0-343}
+        PDI_DOWNLOAD_URL: ${PDI_DOWNLOAD_URL:-https://downloads.sourceforge.net/project/pentaho/Data%20Integration/9.4/pdi-ce-9.4.0.0-343.zip}
+    environment:
+      DB_TYPE: ${STACK_DB_TYPE:-mysql}
+      DB_NAME: ${STACK_DB_NAME:-ecommerce_bi}
+      DB_USER: ${STACK_DB_USER:-bi_user}
+      DB_PASSWORD: ${STACK_DB_PASSWORD:-bi_password}
+      DB_HOST_MYSQL: mysql
+      DB_PORT_MYSQL: 3306
+      DB_HOST_POSTGRES: postgres
+      DB_PORT_POSTGRES: 5432
+      DB_SCHEMA: public
+      WORKSPACE_DIR: /workspace
+    volumes:
+      - ./:/workspace
+      - kettle_data:/root/.kettle
+    command: ["tail", "-f", "/dev/null"]
+
+  pdi-runner:
+    profiles: ["etl"]
+    build:
+      context: ./docker/pdi
+      args:
+        PDI_VERSION: ${PDI_VERSION:-9.4.0.0-343}
+        PDI_DOWNLOAD_URL: ${PDI_DOWNLOAD_URL:-https://downloads.sourceforge.net/project/pentaho/Data%20Integration/9.4/pdi-ce-9.4.0.0-343.zip}
+    environment:
+      DB_TYPE: ${STACK_DB_TYPE:-mysql}
+      DB_NAME: ${STACK_DB_NAME:-ecommerce_bi}
+      DB_USER: ${STACK_DB_USER:-bi_user}
+      DB_PASSWORD: ${STACK_DB_PASSWORD:-bi_password}
+      DB_HOST_MYSQL: mysql
+      DB_PORT_MYSQL: 3306
+      DB_HOST_POSTGRES: postgres
+      DB_PORT_POSTGRES: 5432
+      DB_SCHEMA: public
+      WORKSPACE_DIR: /workspace
+      PDI_JOB_FILE: /workspace/etl/Master_Job.kjb
+    volumes:
+      - ./:/workspace
+      - kettle_data:/root/.kettle
+    command: ["run-job"]
+
+  report-designer:
+    build:
+      context: ./docker/prd
+      args:
+        PRD_VERSION: ${PRD_VERSION:-10.2.0.0-218}
+        PRD_DOWNLOAD_URL: ${PRD_DOWNLOAD_URL:-https://downloads.sourceforge.net/project/pentaho/Report%20Designer/10.2/prd-ce-10.2.0.0-218.zip}
+    environment:
+      DISPLAY_NUM: :1
+      SCREEN_GEOMETRY: 1920x1080x24
+      VNC_PORT: 5900
+      NOVNC_PORT: 6080
+    ports:
+      - "${STACK_PRD_WEB_PORT:-6080}:6080"
+      - "${STACK_PRD_VNC_PORT:-5900}:5900"
+    volumes:
+      - ./:/workspace
+
+volumes:
+  mysql_data:
+  postgres_data:
+  kettle_data:

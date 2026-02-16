@@ -1,0 +1,65 @@
+// =============================================
+// Power BI - DAX Measures & Data Model Guide
+// =============================================
+
+// 1. Core Measures Table: "Key Measures"
+
+Total Revenue = SUM('FACT_ORDERS'[OrderAmount])
+
+Total Orders = DISTINCTCOUNT('FACT_ORDERS'[OrderID])
+
+Total Quantity = SUM('FACT_ORDERS'[Quantity])
+
+Avg Basket Value = DIVIDE([Total Revenue], [Total Orders], 0)
+
+// 2. Time Intelligence
+
+Revenue YTD = 
+CALCULATE(
+    [Total Revenue],
+    DATESYTD('DIM_TIME'[Date])
+)
+
+Revenue Last Month = 
+CALCULATE(
+    [Total Revenue],
+    PREVIOUSMONTH('DIM_TIME'[Date])
+)
+
+Revenue MoM Growth % = 
+DIVIDE(
+    [Total Revenue] - [Revenue Last Month],
+    [Revenue Last Month],
+    0
+)
+
+// 3. Customer & Returns Metrics
+
+Return Count = COUNTROWS('FACT_RETURNS')
+
+Return Rate % = 
+DIVIDE(
+    [Return Count],
+    [Total Orders],
+    0
+)
+
+Active Customers = DISTINCTCOUNT('FACT_ORDERS'[CustomerKey])
+
+Churn Risk High = 
+CALCULATE(
+    COUNTROWS('DIM_CUSTOMER'),
+    'DIM_CUSTOMER'[RFM_Score] <= "222"
+)
+
+// 4. Data Model Implementation Notes
+/*
+    Relationships:
+    - FACT_ORDERS[TimeKey]     *:1    DIM_TIME[TimeKey]
+    - FACT_ORDERS[ProductKey]  *:1    DIM_PRODUCT[ProductKey]
+    - FACT_ORDERS[CustomerKey] *:1    DIM_CUSTOMER[CustomerKey]
+    - FACT_ORDERS[ChannelKey]  *:1    DIM_CHANNEL[ChannelKey]
+    - FACT_ORDERS[RegionKey]   *:1    DIM_REGION[RegionKey]
+    
+    * Ensure "Cross filter direction" is set to "Single" for Star Schema performance.
+*/
