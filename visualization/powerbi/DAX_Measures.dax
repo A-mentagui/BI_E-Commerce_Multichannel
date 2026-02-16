@@ -4,7 +4,7 @@
 
 // 1. Core Measures Table: "Key Measures"
 
-Total Revenue = SUM('FACT_ORDERS'[OrderAmount])
+Total Revenue = SUM('FACT_ORDERS'[Revenue])
 
 Total Orders = DISTINCTCOUNT('FACT_ORDERS'[OrderID])
 
@@ -17,13 +17,13 @@ Avg Basket Value = DIVIDE([Total Revenue], [Total Orders], 0)
 Revenue YTD = 
 CALCULATE(
     [Total Revenue],
-    DATESYTD('DIM_TIME'[Date])
+    DATESYTD('DIM_TIME'[FullDate])
 )
 
 Revenue Last Month = 
 CALCULATE(
     [Total Revenue],
-    PREVIOUSMONTH('DIM_TIME'[Date])
+    PREVIOUSMONTH('DIM_TIME'[FullDate])
 )
 
 Revenue MoM Growth % = 
@@ -49,7 +49,7 @@ Active Customers = DISTINCTCOUNT('FACT_ORDERS'[CustomerKey])
 Churn Risk High = 
 CALCULATE(
     COUNTROWS('DIM_CUSTOMER'),
-    'DIM_CUSTOMER'[RFM_Score] <= "222"
+    'DIM_CUSTOMER'[Segment] = "Nouveau"
 )
 
 // 4. Data Model Implementation Notes

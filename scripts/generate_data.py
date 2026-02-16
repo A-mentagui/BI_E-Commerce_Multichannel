@@ -136,13 +136,40 @@ def generate_orders(num_orders, customers_df, products_df, channels_df, regions_
         'Pop-Up': (100, 250),
         'Réseaux Sociaux': (30, 80)
     }
+
+    # Build product pools by category to generate realistic customer affinities
+    category_products = {
+        category: products_df[products_df['Category'] == category].reset_index(drop=True)
+        for category in CATEGORIES
+    }
+
+    # Assign each customer a primary and secondary preferred category
+    customer_preferences = {}
+    for customer_id in customers_df['CustomerID'].tolist():
+        preferred_categories = np.random.choice(CATEGORIES, size=2, replace=False)
+        customer_preferences[customer_id] = {
+            'primary': preferred_categories[0],
+            'secondary': preferred_categories[1]
+        }
     
     for i in range(num_orders):
         order_id = f"ORD{i:08d}"
         
         # Select random dimensions
         customer = customers_df.sample(1).iloc[0]
-        product = products_df.sample(1).iloc[0]
+        preferences = customer_preferences[customer['CustomerID']]
+        product_choice_random = random.random()
+        if product_choice_random < 0.65:
+            chosen_category = preferences['primary']
+        elif product_choice_random < 0.90:
+            chosen_category = preferences['secondary']
+        else:
+            chosen_category = np.random.choice(CATEGORIES)
+
+        product_pool = category_products.get(chosen_category, products_df)
+        if len(product_pool) == 0:
+            product_pool = products_df
+        product = product_pool.sample(1).iloc[0]
         channel = np.random.choice(list(channel_dist.keys()), p=list(channel_dist.values()))
         channel_id = channels_df[channels_df['ChannelName'] == channel].iloc[0]['ChannelID']
         region = regions_df.sample(1).iloc[0]

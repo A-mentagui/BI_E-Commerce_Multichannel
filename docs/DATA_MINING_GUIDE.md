@@ -173,6 +173,7 @@ Discover products frequently bought together to drive cross-selling and upsellin
 - Finds frequent itemsets (product combinations)
 - Generates association rules
 - Measures strength of associations
+- Uses customer-level product baskets (historical affinity baskets)
 
 ### Key Metrics
 
@@ -199,17 +200,18 @@ Interpretation:
 
 Default Thresholds:
 ```
-min_support: 0.01 (1% of transactions)
-min_confidence: 0.2 (20% confidence)
-min_lift: 1.1 (10% more likely than random)
+min_support (items): 0.002 (0.2% of baskets)
+min_support (pairs): 0.0005 (0.05% of baskets)
+min_confidence: 0.1 (10% confidence)
+min_lift: 1.0 (baseline association)
 ```
 
 ### Cross-Selling Opportunities
 
 High-priority recommendations typically have:
-- Support: > 0.5% (reasonably common)
-- Confidence: > 40% (strong likelihood)
-- Lift: > 1.5 (significantly above random)
+- Support: > 0.05% (sparse catalog, still meaningful)
+- Confidence: > 10% (practical for wide-product catalogs)
+- Lift: > 1.2 (significantly above random)
 - Count: >= 5 co-purchases (sufficient volume)
 
 ### Usage

@@ -1,0 +1,51 @@
+Antecedent,Consequent,Confidence,Lift,Count
+douceur mode & vêtements,tu mode & vêtements,0.22619047619047616,22.835714285714285,19
+tu mode & vêtements,douceur mode & vêtements,0.2,22.835714285714285,19
+alors maison & jardin,goutte maison & jardin,0.20512820512820512,21.859829059829057,16
+goutte maison & jardin,alors maison & jardin,0.17777777777777776,21.859829059829057,16
+fort accessoires,bataille accessoires,0.16666666666666666,21.313333333333333,14
+bataille accessoires,fort accessoires,0.18666666666666665,21.31333333333333,14
+intérieur électronique,flot électronique,0.17105263157894737,21.306049213943954,13
+flot électronique,intérieur électronique,0.16883116883116883,21.30604921394395,13
+avec livres & médias,adresser livres & médias,0.25,20.85,19
+adresser livres & médias,avec livres & médias,0.16521739130434782,20.849999999999998,19
+signifier mode & vêtements,pas mode & vêtements,0.17204301075268816,20.625806451612902,16
+pas mode & vêtements,signifier mode & vêtements,0.2,20.625806451612902,16
+prier sacs & bagages,étranger sacs & bagages,0.1724137931034483,20.41507024265645,15
+étranger sacs & bagages,prier sacs & bagages,0.18518518518518517,20.415070242656448,15
+grain livres & médias,recueillir livres & médias,0.1477272727272727,19.955665813060175,13
+recueillir livres & médias,grain livres & médias,0.18309859154929575,19.955665813060175,13
+défaut art & crafts,livre art & crafts,0.17777777777777776,19.826356589147284,16
+livre art & crafts,défaut art & crafts,0.18604651162790697,19.826356589147284,16
+ignorer mode & vêtements,signifier mode & vêtements,0.19148936170212766,19.748112560054906,18
+signifier mode & vêtements,ignorer mode & vêtements,0.1935483870967742,19.748112560054906,18
+oiseau alimentation,révolution alimentation,0.1625,19.72832278481013,13
+révolution alimentation,oiseau alimentation,0.16455696202531644,19.72832278481013,13
+chez art & crafts,user art & crafts,0.15217391304347827,19.722972972972975,14
+user art & crafts,chez art & crafts,0.1891891891891892,19.722972972972975,14
+escalier pet care,envoyer pet care,0.23750000000000002,19.468910256410258,19
+envoyer pet care,escalier pet care,0.16239316239316237,19.468910256410254,19
+près alimentation,énergie alimentation,0.1630434782608696,19.305555555555557,15
+énergie alimentation,près alimentation,0.18518518518518517,19.305555555555557,15
+parce que accessoires,bataille accessoires,0.15053763440860216,19.250752688172042,14
+bataille accessoires,parce que accessoires,0.18666666666666665,19.25075268817204,14
+paquet alimentation,énergie alimentation,0.16216216216216217,19.2012012012012,12
+énergie alimentation,paquet alimentation,0.14814814814814814,19.2012012012012,12
+vide sacs & bagages,livrer sacs & bagages,0.19767441860465118,19.150458069062722,17
+livrer sacs & bagages,vide sacs & bagages,0.1717171717171717,19.150458069062722,17
+ton sports & loisirs,même sports & loisirs,0.1792452830188679,19.10157232704402,19
+même sports & loisirs,ton sports & loisirs,0.21111111111111108,19.10157232704402,19
+sol alimentation,près alimentation,0.18309859154929575,19.088028169014084,13
+près alimentation,sol alimentation,0.14130434782608695,19.088028169014084,13
+exprimer sports & loisirs,soulever sports & loisirs,0.1875,18.929605263157896,18
+soulever sports & loisirs,exprimer sports & loisirs,0.18947368421052635,18.929605263157896,18
+classe maison & jardin,depuis maison & jardin,0.2,18.805882352941175,19
+officier sacs & bagages,chaîne sacs & bagages,0.16470588235294117,18.805882352941175,14
+chaîne sacs & bagages,officier sacs & bagages,0.16666666666666666,18.805882352941175,14
+depuis maison & jardin,classe maison & jardin,0.18627450980392155,18.805882352941175,19
+fou auto & moto,violence auto & moto,0.16831683168316833,18.771241077596134,17
+violence auto & moto,fou auto & moto,0.19767441860465118,18.771241077596134,17
+entretenir bijoux,plaine bijoux,0.14457831325301207,18.738521654184307,12
+plaine bijoux,entretenir bijoux,0.16216216216216217,18.738521654184307,12
+fenêtre maison & jardin,alors maison & jardin,0.15217391304347827,18.711538461538463,14
+alors maison & jardin,fenêtre maison & jardin,0.1794871794871795,18.711538461538463,14

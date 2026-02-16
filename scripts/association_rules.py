@@ -33,18 +33,25 @@ class AssociationAnalyzer:
         """
         self.orders = orders_df.copy()
         self.products = products_df.copy()
-        self.transaction_db = None
-        self.rules = None
-        self.item_support = None
+        self.transaction_db = pd.DataFrame(columns=['CustomerID', 'Items'])
+        self.rules = pd.DataFrame(columns=['Antecedent', 'Consequent', 'Support', 'Confidence', 'Lift', 'Count'])
+        self.item_support = pd.DataFrame(columns=['Item', 'Support', 'Count'])
     
     def create_transaction_db(self):
-        """Create transaction database (items per order)"""
+        """Create transaction database (items per customer basket history)"""
         
         print("📊 Creating transaction database...")
         
-        # Group products by order
-        transactions = self.orders.groupby('OrderID')['ProductID'].apply(list).reset_index()
-        transactions.columns = ['OrderID', 'Items']
+        # Group products by customer to create richer baskets.
+        # Orders.csv is at order-line grain with one product per order,
+        # so order-level grouping produces 1 item/transaction and no useful rules.
+        transactions = self.orders.groupby('CustomerID')['ProductID'].apply(
+            lambda items: sorted(set(items))
+        ).reset_index()
+        transactions.columns = ['CustomerID', 'Items']
+
+        # Keep only baskets with at least 2 unique items
+        transactions = transactions[transactions['Items'].map(len) >= 2].copy()
         
         # Get product names for readability
         self.transaction_db = transactions.copy()
@@ -62,6 +69,10 @@ class AssociationAnalyzer:
         print(f"\n📉 Calculating support (min_support: {min_support})...")
         
         total_transactions = len(self.transaction_db)
+        if total_transactions == 0:
+            print("⚠ No transactions available")
+            self.item_support = pd.DataFrame(columns=['Item', 'Support', 'Count'])
+            return self.item_support
         all_items = set()
         
         # Get all unique items
@@ -102,41 +113,36 @@ class AssociationAnalyzer:
         return self.item_support
     
     def find_itemsets(self, min_support=0.01):
-        """Find frequent itemsets using Apriori"""
+        """Find frequent itemsets using efficient pairwise mining"""
         
         print(f"\n🔍 Finding frequent itemsets (min_support: {min_support})...")
         
         total_transactions = len(self.transaction_db)
-        
-        # Get frequent 1-itemsets
+        if total_transactions == 0 or self.item_support.empty:
+            print("⚠ No transaction data or frequent items available")
+            self.frequent_itemsets = {}
+            return self.frequent_itemsets
+
+        # Frequent 1-itemsets
         frequent_itemsets = {
-            frozenset([item]): support 
+            frozenset([item]): support
             for item, support in self.item_support.set_index('Item')['Support'].items()
+            if support >= min_support
         }
-        
-        # Generate k-itemsets
-        k = 2
-        while True:
-            candidates = gen_candidates(frequent_itemsets, k)
-            if not candidates:
-                break
-            
-            # Count support for candidates
-            candidate_support = {}
-            for candidate in candidates:
-                count = 0
-                for items in self.transaction_db['Items']:
-                    if candidate.issubset(set(items)):
-                        count += 1
-                support = count / total_transactions
-                if support >= min_support:
-                    candidate_support[candidate] = support
-            
-            if not candidate_support:
-                break
-            
-            frequent_itemsets.update(candidate_support)
-            k += 1
+
+        # Efficient frequent 2-itemsets
+        pair_counts = {}
+        frequent_single_items = set(self.item_support['Item'].tolist())
+        for items in self.transaction_db['Items']:
+            filtered = [item for item in items if item in frequent_single_items]
+            for pair in combinations(filtered, 2):
+                pair_key = frozenset(pair)
+                pair_counts[pair_key] = pair_counts.get(pair_key, 0) + 1
+
+        for pair, count in pair_counts.items():
+            support = count / total_transactions
+            if support >= min_support:
+                frequent_itemsets[pair] = support
         
         self.frequent_itemsets = frequent_itemsets
         
@@ -195,16 +201,16 @@ class AssociationAnalyzer:
                     
                     # Get product names
                     antecedent_names = ', '.join([
-                        self.products[self.products['ProductID'] == pid]['ProductName'].values[0]
-                        if pid in self.products['ProductID'].values else pid
+                        str(self.products[self.products['ProductID'] == pid]['ProductName'].values[0])
+                        if pid in self.products['ProductID'].values else str(pid)
                         for pid in antecedent
-                    ])
+                    ]).strip()
                     
                     consequent_names = ', '.join([
-                        self.products[self.products['ProductID'] == pid]['ProductName'].values[0]
-                        if pid in self.products['ProductID'].values else pid
+                        str(self.products[self.products['ProductID'] == pid]['ProductName'].values[0])
+                        if pid in self.products['ProductID'].values else str(pid)
                         for pid in consequent
-                    ])
+                    ]).strip()
                     
                     rules.append({
                         'Antecedent': antecedent_names,
@@ -215,7 +221,10 @@ class AssociationAnalyzer:
                         'Count': int(support * len(self.transaction_db))
                     })
         
-        self.rules = pd.DataFrame(rules).sort_values('Lift', ascending=False)
+        if len(rules) == 0:
+            self.rules = pd.DataFrame(columns=['Antecedent', 'Consequent', 'Support', 'Confidence', 'Lift', 'Count'])
+        else:
+            self.rules = pd.DataFrame(rules).sort_values('Lift', ascending=False)
         
         print(f"✓ Generated {len(self.rules)} association rules")
         
@@ -223,14 +232,17 @@ class AssociationAnalyzer:
     
     def get_top_rules(self, n=20, metric='Lift'):
         """Get top N rules by specified metric"""
-        
+        if self.rules.empty:
+            return pd.DataFrame(columns=['Antecedent', 'Consequent', 'Support', 'Confidence', 'Lift', 'Count'])
         return self.rules.nlargest(n, metric)
     
     def cross_selling_opportunities(self, n=10):
         """Get cross-selling opportunities"""
+        if self.rules.empty:
+            return pd.DataFrame(columns=['Antecedent', 'Consequent', 'Confidence', 'Lift', 'Count'])
         
         opportunities = self.rules[
-            (self.rules['Confidence'] >= 0.3) & 
+            (self.rules['Confidence'] >= 0.1) & 
             (self.rules['Lift'] > 1.2) &
             (self.rules['Count'] >= 5)  # At least 5 co-purchases
         ].sort_values('Lift', ascending=False).head(n)
@@ -239,11 +251,13 @@ class AssociationAnalyzer:
     
     def product_pairs_analysis(self, n=20):
         """Analyze top product pairs"""
+        if self.rules.empty:
+            return pd.DataFrame(columns=['Antecedent', 'Consequent', 'Support', 'Confidence', 'Lift'])
         
         # Filter rules with high confidence and lift
         high_quality_rules = self.rules[
-            (self.rules['Confidence'] >= 0.4) & 
-            (self.rules['Lift'] > 1.5)
+            (self.rules['Confidence'] >= 0.15) & 
+            (self.rules['Lift'] > 1.2)
         ].head(n)
         
         return high_quality_rules[['Antecedent', 'Consequent', 'Support', 'Confidence', 'Lift']]
@@ -252,7 +266,7 @@ class AssociationAnalyzer:
         """Plot support distribution"""
         
         plt.figure(figsize=(12, 6))
-        plt.bar(range(len(self.item_support)), self.item_support['Support'].values, 
+        plt.bar(range(len(self.item_support)), self.item_support['Support'].to_numpy(dtype=float), 
                color='steelblue', edgecolor='black', alpha=0.7)
         plt.xlabel('Product (Ranked by Support)', fontsize=12)
         plt.ylabel('Support', fontsize=12)
@@ -265,7 +279,7 @@ class AssociationAnalyzer:
     def plot_rules_metrics(self):
         """Plot rules by confidence and lift"""
         
-        if len(self.rules) == 0:
+        if self.rules.empty:
             print("⚠️ No rules to plot")
             return
         
@@ -297,7 +311,7 @@ class AssociationAnalyzer:
     def plot_scatter_confidence_lift(self):
         """Plot rules scatter: Confidence vs Lift"""
         
-        if len(self.rules) == 0:
+        if self.rules.empty:
             print("⚠️ No rules to plot")
             return
         
@@ -340,7 +354,7 @@ class AssociationAnalyzer:
         print("💾 Exported: results/association_item_support.csv")
         
         # Export rules
-        if len(self.rules) > 0:
+        if not self.rules.empty:
             self.rules.to_csv('results/association_rules.csv', index=False)
             print("💾 Exported: results/association_rules.csv")
             
@@ -385,13 +399,13 @@ def main():
     analyzer.create_transaction_db()
     
     # Calculate support
-    analyzer.calculate_support(min_support=0.01)
+    analyzer.calculate_support(min_support=0.002)
     
     # Find itemsets
-    analyzer.find_itemsets(min_support=0.01)
+    analyzer.find_itemsets(min_support=0.0005)
     
     # Generate rules
-    analyzer.generate_rules(min_confidence=0.2, min_lift=1.1)
+    analyzer.generate_rules(min_confidence=0.1, min_lift=1.0)
     
     # Display results
     print("\n" + "="*60)

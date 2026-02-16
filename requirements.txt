@@ -1,0 +1,16 @@
+# E-Commerce BI Project - Python Dependencies
+# Install: pip install -r requirements.txt
+
+# Data generation
+pandas>=1.5.0
+numpy>=1.23.0
+faker>=18.0.0
+
+# Data mining / ML
+scikit-learn>=1.2.0
+matplotlib>=3.6.0
+seaborn>=0.12.0
+
+# Database connectors (install one or both)
+mysql-connector-python>=8.0.0
+psycopg2-binary>=2.9.0

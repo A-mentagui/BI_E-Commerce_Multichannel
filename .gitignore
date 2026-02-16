@@ -18,8 +18,10 @@ __pycache__/
 *.swp
 
 # Ignore database dumps
-*.sql
 *.db
+
+# Keep SQL schema files tracked
+# *.sql is NOT ignored — sql/ folder is versioned
 
 # Ignore IDE-specific files
 .vscode/
@@ -35,9 +37,12 @@ docker/*.zip
 /visualization/**/*.xlsx
 /visualization/**/*.html
 
-# Ignore environment files
+# Ignore environment files (but keep examples)
 .env
-.env.*
+.env.local
+.env.container
+!.env.example
+!.env.container.example
 
 # Ignore node_modules (if applicable)
 node_modules/

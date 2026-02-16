@@ -145,8 +145,12 @@ class ChurnPredictor:
         print("\n🤖 Training Random Forest model...")
         
         # Select features (exclude CustomerID and target)
+        # Avoid target leakage: Churn is derived from Recency, so Recency-based
+        # features must not be used as predictors.
+        leakage_features = {'Recency', 'RecencyMonths', 'RecentActivityRatio'}
         feature_cols = [col for col in self.features.columns 
-                       if col not in ['CustomerID', 'Churn', 'LastPurchase', 'FirstPurchase']]
+                   if col not in ['CustomerID', 'Churn', 'LastPurchase', 'FirstPurchase']
+                   and col not in leakage_features]
         X = self.features[feature_cols]
         y = self.features['Churn']
         

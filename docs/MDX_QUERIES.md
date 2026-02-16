@@ -18,7 +18,7 @@ Les requêtes MDX (Multi-Dimensional Expressions) analysent le cube OLAP `SalesC
 
 ### Cube Structure
 
-```
+```text
 SalesCube
 ├─ Dimensions:
 │  ├─ Time (Year→Quarter→Month→Day)
@@ -31,10 +31,19 @@ SalesCube
 └─ Measures:
    ├─ Revenue
    ├─ Quantity
-   ├─ Return_Rate
-   ├─ Satisfaction
-   ├─ Avg_Basket
-   └─ Churn_Risk
+   ├─ UnitPrice (avg)
+   ├─ Discount
+   ├─ Order_Count
+   ├─ Return_Count
+   ├─ Refund_Amount
+   ├─ Feedback_Count
+   ├─ Satisfaction_Sum
+   ├─ Unique_Customers
+   ├─ Satisfaction (calculated)
+   ├─ Avg_Basket (calculated)
+   ├─ Discount_Rate_Pct (calculated)
+   ├─ Return_Rate_Pct (calculated)
+   └─ Net_Revenue (calculated)
 ```
 
 ---
@@ -128,13 +137,13 @@ WITH MEMBER [Measures].[Gross_Revenue] AS
   [Measures].[Revenue]
   
 MEMBER [Measures].[Total_Refunds] AS
-  SUM([Fact_Returns].[Return_Amount])
+  [Measures].[Refund_Amount]
   
-MEMBER [Measures].[Net_Revenue] AS
+MEMBER [Measures].[Net_Revenue_Calc] AS
   [Measures].[Gross_Revenue] - [Measures].[Total_Refunds]
 
 SELECT
-  {[Measures].[Gross_Revenue], [Measures].[Total_Refunds], [Measures].[Net_Revenue]} ON COLUMNS,
+  {[Measures].[Gross_Revenue], [Measures].[Total_Refunds], [Measures].[Net_Revenue_Calc]} ON COLUMNS,
   [Channel].[ChannelHierarchy].MEMBERS ON ROWS
 FROM [SalesCube]
 ```
@@ -559,4 +568,4 @@ EVALUATE
 
 ---
 
-**End of MDX Queries Documentation**
+### End of MDX Queries Documentation

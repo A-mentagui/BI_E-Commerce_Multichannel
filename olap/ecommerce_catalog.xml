@@ -58,7 +58,7 @@
     <Measure name="Quantity" column="quantity" aggregator="sum" formatString="#,##0"/>
     <Measure name="UnitPrice" column="unitprice" aggregator="avg" formatString="#,##0.00"/>
     <Measure name="Discount" column="discount" aggregator="sum" formatString="#,##0.00"/>
-    <Measure name="Order_Count" column="order_id" aggregator="count" formatString="#,##0"/>
+    <Measure name="Order_Count" column="orderid" aggregator="count" formatString="#,##0"/>
     <Measure name="Return_Count" column="return_count" aggregator="sum" formatString="#,##0"/>
     <Measure name="Refund_Amount" column="refund_amount" aggregator="sum" formatString="#,##0.00"/>
     <Measure name="Feedback_Count" column="feedback_count" aggregator="sum" formatString="#,##0"/>

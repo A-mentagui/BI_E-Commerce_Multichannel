@@ -5,9 +5,9 @@
         "name": "SalesCube",
         "connection": "ecommerce_bi_olap",
         "catalog": "SalesCube",
-        "schema": "EcommerceCube"
+        "schema": "EcommerceBIOLAP"
     },
-    "mdx": "SELECT NON EMPTY {Hierarchize({[Measures].[Revenue], [Measures].[Order_Count], [Measures].[Avg_Basket]})} ON COLUMNS, NON EMPTY {Hierarchize({[Time].[Time].[Year].Members})} ON ROWS FROM [SalesCube]",
+    "mdx": "SELECT NON EMPTY {Hierarchize({[Measures].[Revenue], [Measures].[Order_Count], [Measures].[Avg_Basket]})} ON COLUMNS, NON EMPTY {Hierarchize({[Time].[TimeHierarchy].[Year].Members})} ON ROWS FROM [SalesCube]",
     "type": "QUERY",
     "queryModel": {
         "axes": {
@@ -30,7 +30,7 @@
                 "aggregators": []
             },
             "ROWS": {
-                "mdx": "{Hierarchize({[Time].[Time].[Year].Members})}",
+                "mdx": "{Hierarchize({[Time].[TimeHierarchy].[Year].Members})}",
                 "filters": [],
                 "sortOrder": null,
                 "sortEvaluationLiteral": null,
