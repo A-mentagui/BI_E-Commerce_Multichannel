@@ -189,29 +189,29 @@ SELECT
     f.Quantity,
     f.UnitPrice,
     f.Discount,
-    COALESCE(r.ReturnCount, 0) AS return_count,
-    COALESCE(r.RefundAmount, 0) AS refund_amount,
-    COALESCE(fb.FeedbackCount, 0) AS feedback_count,
-    COALESCE(fb.SatisfactionTotal, 0) AS satisfaction_sum,
+    COALESCE(ret_summary.return_count, 0) AS return_count,
+    COALESCE(ret_summary.refund_amount, 0) AS refund_amount,
+    COALESCE(fb_summary.feedback_count, 0) AS feedback_count,
+    COALESCE(fb_summary.satisfaction_sum, 0) AS satisfaction_sum,
     f.OrderDate,
     f.CreatedAt
 FROM FACT_ORDERS f
 LEFT JOIN (
     SELECT
         OrderKey,
-        COUNT(*) AS ReturnCount,
-        SUM(COALESCE(RefundAmount, 0)) AS RefundAmount
+        COUNT(*) AS return_count,
+        SUM(COALESCE(RefundAmount, 0)) AS refund_amount
     FROM FACT_RETURNS
     GROUP BY OrderKey
-) r ON f.OrderKey = r.OrderKey
+) ret_summary ON f.OrderKey = ret_summary.OrderKey
 LEFT JOIN (
     SELECT
         OrderKey,
-        COUNT(*) AS FeedbackCount,
-        SUM(COALESCE(Satisfaction, 0)) AS SatisfactionTotal
+        COUNT(*) AS feedback_count,
+        SUM(COALESCE(Satisfaction, 0)) AS satisfaction_sum
     FROM FACT_FEEDBACK
     GROUP BY OrderKey
-) fb ON f.OrderKey = fb.OrderKey;
+) fb_summary ON f.OrderKey = fb_summary.OrderKey;
 
 -- View: Order Summary with Dimensions
 CREATE OR REPLACE VIEW vw_orders_summary AS
@@ -244,14 +244,14 @@ SELECT
     ch.ChannelName,
     SUM(f.Revenue) as TotalRevenue,
     SUM(f.Quantity) as TotalQuantity,
-    COUNT(f.OrderID) as OrderCount,
+    COUNT(DISTINCT f.OrderID) as OrderCount,
     AVG(f.Revenue) as AvgBasket,
-    COUNT(ret.ReturnID) as ReturnCount,
-    ROUND(COUNT(ret.ReturnID) / COUNT(f.OrderID) * 100, 2) as ReturnRatePercent
+    COUNT(DISTINCT ret.ReturnID) as ReturnCount,
+    ROUND(COUNT(DISTINCT ret.ReturnID) * 100.0 / COUNT(DISTINCT f.OrderID), 2) as ReturnRatePercent
 FROM FACT_ORDERS f
 LEFT JOIN FACT_RETURNS ret ON f.OrderKey = ret.OrderKey
 JOIN DIM_CHANNEL ch ON f.ChannelKey = ch.ChannelKey
-GROUP BY ch.ChannelName;
+GROUP BY ch.ChannelKey, ch.ChannelName;
 
 -- View: Customer Segment Analysis
 CREATE OR REPLACE VIEW vw_customer_segment_analysis AS
@@ -260,7 +260,7 @@ SELECT
     COUNT(DISTINCT c.CustomerKey) as CustomerCount,
     SUM(f.Revenue) as TotalRevenue,
     AVG(f.Revenue) as AvgOrderValue,
-    COUNT(f.OrderID) as TotalOrders,
+    COUNT(DISTINCT f.OrderID) as TotalOrders,
     AVG(fb.Satisfaction) as AvgSatisfaction
 FROM DIM_CUSTOMER c
 LEFT JOIN FACT_ORDERS f ON c.CustomerKey = f.CustomerKey
@@ -273,15 +273,15 @@ SELECT
     r.RegionName,
     COUNT(DISTINCT f.CustomerKey) as UniqueCustomers,
     SUM(f.Revenue) as TotalRevenue,
-    COUNT(f.OrderID) as OrderCount,
+    COUNT(DISTINCT f.OrderID) as OrderCount,
     AVG(f.Revenue) as AvgBasket,
-    ROUND(COUNT(ret.ReturnID) / COUNT(f.OrderID) * 100, 2) as ReturnRatePercent,
+    ROUND(COUNT(DISTINCT ret.ReturnID) * 100.0 / COUNT(DISTINCT f.OrderID), 2) as ReturnRatePercent,
     AVG(fb.Satisfaction) as AvgSatisfaction
 FROM FACT_ORDERS f
 LEFT JOIN FACT_RETURNS ret ON f.OrderKey = ret.OrderKey
 LEFT JOIN FACT_FEEDBACK fb ON f.OrderKey = fb.OrderKey
 JOIN DIM_REGION r ON f.RegionKey = r.RegionKey
-GROUP BY r.RegionName;
+GROUP BY r.RegionKey, r.RegionName;
 
 -- ============================================================================
 -- STORED PROCEDURES
@@ -292,15 +292,15 @@ DELIMITER $$
 
 CREATE PROCEDURE sp_populate_time_dimension(IN start_date DATE, IN end_date DATE)
 BEGIN
-    DECLARE current_date DATE;
+    DECLARE loop_date DATE;
     DECLARE time_key INT;
     
-    SET current_date = start_date;
+    SET loop_date = start_date;
     
-    WHILE current_date <= end_date DO
-        SET time_key = YEAR(current_date) * 10000 + 
-                       MONTH(current_date) * 100 + 
-                       DAY(current_date);
+    WHILE loop_date <= end_date DO
+        SET time_key = YEAR(loop_date) * 10000 + 
+                       MONTH(loop_date) * 100 + 
+                       DAY(loop_date);
         
         INSERT IGNORE INTO DIM_TIME (
             TimeKey, FullDate, Year, Quarter, Month, MonthName,
@@ -308,26 +308,26 @@ BEGIN
             IsWeekend, IsHoliday
         ) VALUES (
             time_key,
-            current_date,
-            YEAR(current_date),
-            QUARTER(current_date),
-            MONTH(current_date),
-            DATE_FORMAT(current_date, '%B'),
-            DAY(current_date),
-            DAYOFWEEK(current_date),
-            DATE_FORMAT(current_date, '%W'),
-            WEEK(current_date),
+            loop_date,
+            YEAR(loop_date),
+            QUARTER(loop_date),
+            MONTH(loop_date),
+            DATE_FORMAT(loop_date, '%B'),
+            DAY(loop_date),
+            DAYOFWEEK(loop_date),
+            DATE_FORMAT(loop_date, '%W'),
+            WEEK(loop_date),
             CASE 
-                WHEN MONTH(current_date) IN (12, 1, 2) THEN 'Hiver'
-                WHEN MONTH(current_date) IN (3, 4, 5) THEN 'Printemps'
-                WHEN MONTH(current_date) IN (6, 7, 8) THEN 'Été'
+                WHEN MONTH(loop_date) IN (12, 1, 2) THEN 'Hiver'
+                WHEN MONTH(loop_date) IN (3, 4, 5) THEN 'Printemps'
+                WHEN MONTH(loop_date) IN (6, 7, 8) THEN 'Été'
                 ELSE 'Automne'
             END,
-            DAYOFWEEK(current_date) IN (1, 7),
+            DAYOFWEEK(loop_date) IN (1, 7),
             FALSE
         );
         
-        SET current_date = DATE_ADD(current_date, INTERVAL 1 DAY);
+        SET loop_date = DATE_ADD(loop_date, INTERVAL 1 DAY);
     END WHILE;
 END$$
 

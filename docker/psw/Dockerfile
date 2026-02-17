@@ -1,19 +1,19 @@
 FROM eclipse-temurin:11-jre-jammy
 
-ARG PDI_VERSION=11.0.0.0-237
+ARG PSW_VERSION=11.0.0.0-237
 
 RUN apt-get update \
   && apt-get install -y --no-install-recommends bash unzip ca-certificates tini \
   && rm -rf /var/lib/apt/lists/*
 
-COPY pdi-ce-${PDI_VERSION}.zip /tmp/pdi.zip
+COPY psw-ce-${PSW_VERSION}.zip /tmp/psw.zip
 
-RUN mkdir -p /opt/pdi \
-  && unzip -q /tmp/pdi.zip -d /opt/pdi \
-  && rm -f /tmp/pdi.zip
+RUN mkdir -p /opt/psw \
+  && unzip -q /tmp/psw.zip -d /opt/psw \
+  && rm -f /tmp/psw.zip
 
-ENV PDI_HOME=/opt/pdi/data-integration
-ENV PATH=${PDI_HOME}:${PDI_HOME}/kitchen.sh:${PDI_HOME}/pan.sh:${PATH}
+ENV PSW_HOME=/opt/psw/workbench-schema
+ENV PATH=${PSW_HOME}:${PSW_HOME}/bin:${PATH}
 
 COPY entrypoint.sh /entrypoint.sh
 RUN sed -i 's/\r$//' /entrypoint.sh && chmod +x /entrypoint.sh

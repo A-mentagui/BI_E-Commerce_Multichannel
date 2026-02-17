@@ -484,7 +484,7 @@
       <schema_name/>
     </partitioning>
     <connection>BI</connection>
-    <schema>public</schema>
+    <schema>ecommerce_bi</schema>
     <table>fact_orders</table>
     <commit>1000</commit>
     <truncate>N</truncate>
@@ -584,7 +584,7 @@
     <cache_load_all>N</cache_load_all>
     <cache_size>0</cache_size>
     <lookup>
-      <schema>public</schema>
+      <schema>ecommerce_bi</schema>
       <table>dim_channel</table>
       <orderby/>
       <fail_on_multiple>N</fail_on_multiple>
@@ -632,7 +632,7 @@
     <cache_load_all>N</cache_load_all>
     <cache_size>0</cache_size>
     <lookup>
-      <schema>public</schema>
+      <schema>ecommerce_bi</schema>
       <table>dim_customer</table>
       <orderby/>
       <fail_on_multiple>N</fail_on_multiple>
@@ -680,7 +680,7 @@
     <cache_load_all>N</cache_load_all>
     <cache_size>0</cache_size>
     <lookup>
-      <schema>public</schema>
+      <schema>ecommerce_bi</schema>
       <table>dim_delivery</table>
       <orderby/>
       <fail_on_multiple>N</fail_on_multiple>
@@ -728,7 +728,7 @@
     <cache_load_all>N</cache_load_all>
     <cache_size>0</cache_size>
     <lookup>
-      <schema>public</schema>
+      <schema>ecommerce_bi</schema>
       <table>dim_product</table>
       <orderby/>
       <fail_on_multiple>N</fail_on_multiple>
@@ -776,7 +776,7 @@
     <cache_load_all>N</cache_load_all>
     <cache_size>0</cache_size>
     <lookup>
-      <schema>public</schema>
+      <schema>ecommerce_bi</schema>
       <table>dim_region</table>
       <orderby/>
       <fail_on_multiple>N</fail_on_multiple>
@@ -824,7 +824,7 @@
     <cache_load_all>N</cache_load_all>
     <cache_size>0</cache_size>
     <lookup>
-      <schema>public</schema>
+      <schema>ecommerce_bi</schema>
       <table>dim_time</table>
       <orderby/>
       <fail_on_multiple>N</fail_on_multiple>

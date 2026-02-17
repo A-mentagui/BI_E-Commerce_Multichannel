@@ -650,7 +650,7 @@ if (fulldate != null) {
     <commit>100</commit>
     <update_bypassed>N</update_bypassed>
     <lookup>
-      <schema>public</schema>
+      <schema>ecommerce_bi</schema>
       <table>dim_time</table>
       <key>
         <name>timekey</name>

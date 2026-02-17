@@ -499,7 +499,7 @@
       <schema_name/>
     </partitioning>
     <connection>BI</connection>
-    <schema>public</schema>
+    <schema>ecommerce_bi</schema>
     <table>dim_delivery</table>
     <commit>1000</commit>
     <truncate>N</truncate>

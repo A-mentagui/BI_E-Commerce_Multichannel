@@ -39,13 +39,8 @@ services:
       retries: 20
 
   saiku:
-    build:
-      context: ./docker/saiku
-      args:
-        SAIKU_VERSION: ${SAIKU_VERSION:-3.17}
-        SAIKU_DOWNLOAD_URL: ${SAIKU_DOWNLOAD_URL:-https://downloads.sourceforge.net/project/saiku/saiku-server/saiku-server-3.17.zip}
-        MYSQL_JDBC_URL: ${MYSQL_JDBC_URL:-https://repo1.maven.org/maven2/com/mysql/mysql-connector-j/8.4.0/mysql-connector-j-8.4.0.jar}
-        POSTGRES_JDBC_URL: ${POSTGRES_JDBC_URL:-https://repo1.maven.org/maven2/org/postgresql/postgresql/42.7.4/postgresql-42.7.4.jar}
+    profiles: ["saiku"]
+    image: loumaris/saiku:latest
     environment:
       DB_TYPE: ${STACK_DB_TYPE:-mysql}
       DB_NAME: ${STACK_DB_NAME:-ecommerce_bi}
@@ -72,8 +67,7 @@ services:
     build:
       context: ./docker/pdi
       args:
-        PDI_VERSION: ${PDI_VERSION:-9.4.0.0-343}
-        PDI_DOWNLOAD_URL: ${PDI_DOWNLOAD_URL:-https://downloads.sourceforge.net/project/pentaho/Data%20Integration/9.4/pdi-ce-9.4.0.0-343.zip}
+        PDI_VERSION: ${PDI_VERSION:-11.0.0.0-237}
     environment:
       DB_TYPE: ${STACK_DB_TYPE:-mysql}
       DB_NAME: ${STACK_DB_NAME:-ecommerce_bi}
@@ -95,8 +89,7 @@ services:
     build:
       context: ./docker/pdi
       args:
-        PDI_VERSION: ${PDI_VERSION:-9.4.0.0-343}
-        PDI_DOWNLOAD_URL: ${PDI_DOWNLOAD_URL:-https://downloads.sourceforge.net/project/pentaho/Data%20Integration/9.4/pdi-ce-9.4.0.0-343.zip}
+        PDI_VERSION: ${PDI_VERSION:-11.0.0.0-237}
     environment:
       DB_TYPE: ${STACK_DB_TYPE:-mysql}
       DB_NAME: ${STACK_DB_NAME:-ecommerce_bi}
@@ -125,8 +118,7 @@ services:
     build:
       context: ./docker/prd
       args:
-        PRD_VERSION: ${PRD_VERSION:-10.2.0.0-218}
-        PRD_DOWNLOAD_URL: ${PRD_DOWNLOAD_URL:-https://downloads.sourceforge.net/project/pentaho/Report%20Designer/10.2/prd-ce-10.2.0.0-218.zip}
+        PRD_VERSION: ${PRD_VERSION:-11.0.0.0-237}
     environment:
       DISPLAY_NUM: :1
       SCREEN_GEOMETRY: 1920x1080x24
@@ -137,6 +129,17 @@ services:
       - "${STACK_PRD_VNC_PORT:-5900}:5900"
     volumes:
       - ./:/workspace
+
+  workbench-schema:
+    build:
+      context: ./docker/psw
+      args:
+        PSW_VERSION: ${PSW_VERSION:-11.0.0.0-237}
+    environment:
+      WORKSPACE_DIR: /workspace
+    volumes:
+      - ./:/workspace
+    command: ["tail", "-f", "/dev/null"]
 
 volumes:
   mysql_data:

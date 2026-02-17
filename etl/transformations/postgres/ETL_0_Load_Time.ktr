@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <transformation>
   <info>
-    <name>ETL_7_Load_Returns</name>
-    <description>PDI 11 compatible shell for FACT_RETURNS load with FACT_ORDERS lookup</description>
+    <name>ETL_0_Load_Time</name>
+    <description>PDI 11 compatible load for DIM_TIME from orders.csv</description>
     <extended_description/>
     <trans_version/>
     <trans_type>Normal</trans_type>
@@ -427,9 +427,9 @@
     <clusterschemas>
     </clusterschemas>
     <created_user/>
-    <created_date>2026/02/16 00:18:10.049</created_date>
+    <created_date>2026/02/15 23:59:07.648</created_date>
     <modified_user/>
-    <modified_date>2026/02/16 00:18:10.049</modified_date>
+    <modified_date>2026/02/15 23:59:07.648</modified_date>
     <key_for_session_key>H4sIAAAAAAAA/wMAAAAAAAAAAAA=</key_for_session_key>
     <is_key_private>N</is_key_private>
   </info>
@@ -437,64 +437,188 @@
   </notepads>
   <order>
     <hop>
-      <from>Read Returns CSV</from>
-      <to>Lookup OrderKey</to>
+      <from>Read Orders CSV</from>
+      <to>Sort Order Dates</to>
       <enabled>Y</enabled>
     </hop>
     <hop>
-      <from>Lookup OrderKey</from>
-      <to>Load FACT_RETURNS</to>
+      <from>Sort Order Dates</from>
+      <to>Unique Order Dates</to>
+      <enabled>Y</enabled>
+    </hop>
+    <hop>
+      <from>Unique Order Dates</from>
+      <to>Derive Time Attributes</to>
+      <enabled>Y</enabled>
+    </hop>
+    <hop>
+      <from>Derive Time Attributes</from>
+      <to>Insert / update</to>
       <enabled>Y</enabled>
     </hop>
   </order>
   <step>
-    <name>Load FACT_RETURNS</name>
-    <type>TableOutput</type>
+    <name>Derive Time Attributes</name>
+    <type>ScriptValueMod</type>
     <description/>
-    <distribute>Y</distribute>
+    <distribute>N</distribute>
     <custom_distribution/>
     <copies>1</copies>
     <partitioning>
       <method>none</method>
       <schema_name/>
     </partitioning>
-    <connection>BI</connection>
-    <schema>ecommerce_bi</schema>
-    <table>fact_returns</table>
-    <commit>1000</commit>
-    <truncate>N</truncate>
-    <ignore_errors>N</ignore_errors>
-    <use_batch>Y</use_batch>
-    <specify_fields>Y</specify_fields>
-    <partitioning_enabled>N</partitioning_enabled>
-    <partitioning_field/>
-    <partitioning_daily>N</partitioning_daily>
-    <partitioning_monthly>N</partitioning_monthly>
-    <tablename_in_field>N</tablename_in_field>
-    <tablename_field/>
-    <tablename_in_table>N</tablename_in_table>
-    <return_keys>N</return_keys>
-    <return_field/>
+    <compatible>N</compatible>
+    <optimizationLevel>9</optimizationLevel>
+    <jsScripts>
+      <jsScript>
+        <jsScript_type>0</jsScript_type>
+        <jsScript_name>Time Dimensions</jsScript_name>
+        <jsScript_script>// 1. Ensure we have a valid JS Date object
+var fulldate = (OrderDate != null) ? new Date(OrderDate.getTime()) : null;
+
+if (fulldate != null) {
+    var createdat = new Date();
+    var year = fulldate.getFullYear();
+    var month = fulldate.getMonth() + 1;
+    var quarter = Math.floor((month - 1) / 3) + 1;
+    var dayofmonth = fulldate.getDate();
+    var dow0 = fulldate.getDay();
+    var dayofweek = ((dow0 + 6) % 7) + 1;
+
+    var monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+    var dayNames = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+    var monthname = monthNames[month - 1];
+    var dayname = dayNames[dow0];
+
+    var startOfYear = new Date(year, 0, 1);
+    var diffDays = Math.floor((fulldate.getTime() - startOfYear.getTime()) / 86400000);
+    var weekofyear = Math.floor((diffDays + startOfYear.getDay() + 1) / 7) + 1;
+
+    var season = 'Winter';
+    if (month >= 3 &amp;&amp; month &lt;= 5) season = 'Spring';
+    if (month >= 6 &amp;&amp; month &lt;= 8) season = 'Summer';
+    if (month >= 9 &amp;&amp; month &lt;= 11) season = 'Autumn';
+
+    var isweekend = (dow0 == 0 || dow0 == 6);
+    var isholiday = false;
+
+    var timekey = (year * 10000) + (month * 100) + dayofmonth;
+}</jsScript_script>
+      </jsScript>
+    </jsScripts>
     <fields>
       <field>
-        <column_name>returnid</column_name>
-        <stream_name>ReturnID</stream_name>
+        <name>timekey</name>
+        <rename>timekey</rename>
+        <type>Integer</type>
+        <length>9</length>
+        <precision>0</precision>
+        <replace>N</replace>
       </field>
       <field>
-        <column_name>orderkey</column_name>
-        <stream_name>OrderKey</stream_name>
+        <name>fulldate</name>
+        <rename>fulldate</rename>
+        <type>Date</type>
+        <length>-1</length>
+        <precision>-1</precision>
+        <replace>N</replace>
       </field>
       <field>
-        <column_name>returndate</column_name>
-        <stream_name>ReturnDate</stream_name>
+        <name>year</name>
+        <rename>year</rename>
+        <type>Integer</type>
+        <length>4</length>
+        <precision>0</precision>
+        <replace>N</replace>
       </field>
       <field>
-        <column_name>returnreason</column_name>
-        <stream_name>ReturnReason</stream_name>
+        <name>quarter</name>
+        <rename>quarter</rename>
+        <type>Integer</type>
+        <length>1</length>
+        <precision>0</precision>
+        <replace>N</replace>
       </field>
       <field>
-        <column_name>refundamount</column_name>
-        <stream_name>RefundAmount</stream_name>
+        <name>month</name>
+        <rename>month</rename>
+        <type>Integer</type>
+        <length>2</length>
+        <precision>0</precision>
+        <replace>N</replace>
+      </field>
+      <field>
+        <name>monthname</name>
+        <rename>monthname</rename>
+        <type>String</type>
+        <length>20</length>
+        <precision>-1</precision>
+        <replace>N</replace>
+      </field>
+      <field>
+        <name>dayofmonth</name>
+        <rename>dayofmonth</rename>
+        <type>Integer</type>
+        <length>2</length>
+        <precision>0</precision>
+        <replace>N</replace>
+      </field>
+      <field>
+        <name>dayofweek</name>
+        <rename>dayofweek</rename>
+        <type>Integer</type>
+        <length>1</length>
+        <precision>0</precision>
+        <replace>N</replace>
+      </field>
+      <field>
+        <name>dayname</name>
+        <rename>dayname</rename>
+        <type>String</type>
+        <length>20</length>
+        <precision>-1</precision>
+        <replace>N</replace>
+      </field>
+      <field>
+        <name>weekofyear</name>
+        <rename>weekofyear</rename>
+        <type>Integer</type>
+        <length>2</length>
+        <precision>0</precision>
+        <replace>N</replace>
+      </field>
+      <field>
+        <name>season</name>
+        <rename>season</rename>
+        <type>String</type>
+        <length>20</length>
+        <precision>-1</precision>
+        <replace>N</replace>
+      </field>
+      <field>
+        <name>isweekend</name>
+        <rename>isweekend</rename>
+        <type>Boolean</type>
+        <length>1</length>
+        <precision>-1</precision>
+        <replace>N</replace>
+      </field>
+      <field>
+        <name>isholiday</name>
+        <rename>isholiday</rename>
+        <type>Boolean</type>
+        <length>1</length>
+        <precision>-1</precision>
+        <replace>N</replace>
+      </field>
+      <field>
+        <name>createdat</name>
+        <rename>createdat</rename>
+        <type>Date</type>
+        <length>-1</length>
+        <precision>-1</precision>
+        <replace>N</replace>
       </field>
     </fields>
     <attributes/>
@@ -506,14 +630,14 @@
       </output>
     </remotesteps>
     <GUI>
-      <xloc>640</xloc>
-      <yloc>100</yloc>
+      <xloc>560</xloc>
+      <yloc>80</yloc>
       <draw>Y</draw>
     </GUI>
   </step>
   <step>
-    <name>Lookup OrderKey</name>
-    <type>DBLookup</type>
+    <name>Insert / update</name>
+    <type>InsertUpdate</type>
     <description/>
     <distribute>Y</distribute>
     <custom_distribution/>
@@ -523,26 +647,164 @@
       <schema_name/>
     </partitioning>
     <connection>BI</connection>
-    <cache>N</cache>
-    <cache_load_all>N</cache_load_all>
-    <cache_size>0</cache_size>
+    <commit>100</commit>
+    <update_bypassed>N</update_bypassed>
     <lookup>
-      <schema>ecommerce_bi</schema>
-      <table>fact_orders</table>
-      <orderby/>
-      <fail_on_multiple>N</fail_on_multiple>
-      <eat_row_on_failure>N</eat_row_on_failure>
+      
+      <table>dim_time</table>
       <key>
-        <name>OrderID</name>
-        <field>orderid</field>
+        <name>timekey</name>
+        <field>timekey</field>
+        <condition>=</condition>
+        <name2/>
+      </key>
+      <key>
+        <name>fulldate</name>
+        <field>fulldate</field>
+        <condition>=</condition>
+        <name2/>
+      </key>
+      <key>
+        <name>year</name>
+        <field>year</field>
+        <condition>=</condition>
+        <name2/>
+      </key>
+      <key>
+        <name>quarter</name>
+        <field>quarter</field>
+        <condition>=</condition>
+        <name2/>
+      </key>
+      <key>
+        <name>month</name>
+        <field>month</field>
+        <condition>=</condition>
+        <name2/>
+      </key>
+      <key>
+        <name>monthname</name>
+        <field>monthname</field>
+        <condition>=</condition>
+        <name2/>
+      </key>
+      <key>
+        <name>dayofmonth</name>
+        <field>dayofmonth</field>
+        <condition>=</condition>
+        <name2/>
+      </key>
+      <key>
+        <name>dayofweek</name>
+        <field>dayofweek</field>
+        <condition>=</condition>
+        <name2/>
+      </key>
+      <key>
+        <name>dayname</name>
+        <field>dayname</field>
+        <condition>=</condition>
+        <name2/>
+      </key>
+      <key>
+        <name>weekofyear</name>
+        <field>weekofyear</field>
+        <condition>=</condition>
+        <name2/>
+      </key>
+      <key>
+        <name>season</name>
+        <field>season</field>
+        <condition>=</condition>
+        <name2/>
+      </key>
+      <key>
+        <name>isweekend</name>
+        <field>isweekend</field>
+        <condition>=</condition>
+        <name2/>
+      </key>
+      <key>
+        <name>isholiday</name>
+        <field>isholiday</field>
+        <condition>=</condition>
+        <name2/>
+      </key>
+      <key>
+        <name>createdat</name>
+        <field>createdat</field>
         <condition>=</condition>
         <name2/>
       </key>
       <value>
-        <name>orderkey</name>
-        <rename>orderkey</rename>
-        <default/>
-        <type>Integer</type>
+        <name>timekey</name>
+        <rename>timekey</rename>
+        <update>Y</update>
+      </value>
+      <value>
+        <name>fulldate</name>
+        <rename>fulldate</rename>
+        <update>Y</update>
+      </value>
+      <value>
+        <name>year</name>
+        <rename>year</rename>
+        <update>Y</update>
+      </value>
+      <value>
+        <name>quarter</name>
+        <rename>quarter</rename>
+        <update>Y</update>
+      </value>
+      <value>
+        <name>month</name>
+        <rename>month</rename>
+        <update>Y</update>
+      </value>
+      <value>
+        <name>monthname</name>
+        <rename>monthname</rename>
+        <update>Y</update>
+      </value>
+      <value>
+        <name>dayofmonth</name>
+        <rename>dayofmonth</rename>
+        <update>Y</update>
+      </value>
+      <value>
+        <name>dayofweek</name>
+        <rename>dayofweek</rename>
+        <update>Y</update>
+      </value>
+      <value>
+        <name>dayname</name>
+        <rename>dayname</rename>
+        <update>Y</update>
+      </value>
+      <value>
+        <name>weekofyear</name>
+        <rename>weekofyear</rename>
+        <update>Y</update>
+      </value>
+      <value>
+        <name>season</name>
+        <rename>season</rename>
+        <update>Y</update>
+      </value>
+      <value>
+        <name>isweekend</name>
+        <rename>isweekend</rename>
+        <update>Y</update>
+      </value>
+      <value>
+        <name>isholiday</name>
+        <rename>isholiday</rename>
+        <update>Y</update>
+      </value>
+      <value>
+        <name>createdat</name>
+        <rename>createdat</rename>
+        <update>Y</update>
       </value>
     </lookup>
     <attributes/>
@@ -554,13 +816,13 @@
       </output>
     </remotesteps>
     <GUI>
-      <xloc>380</xloc>
-      <yloc>100</yloc>
+      <xloc>784</xloc>
+      <yloc>80</yloc>
       <draw>Y</draw>
     </GUI>
   </step>
   <step>
-    <name>Read Returns CSV</name>
+    <name>Read Orders CSV</name>
     <type>CsvInput</type>
     <description/>
     <distribute>Y</distribute>
@@ -570,7 +832,7 @@
       <method>none</method>
       <schema_name/>
     </partitioning>
-    <filename>${Internal.Transformation.Filename.Directory}/../../data/raw/returns.csv</filename>
+    <filename>${Internal.Transformation.Filename.Directory}/../../data/raw/orders.csv</filename>
     <filename_field/>
     <rownum_field/>
     <include_filename>N</include_filename>
@@ -586,29 +848,7 @@
     <encoding>UTF-8</encoding>
     <fields>
       <field>
-        <name>ReturnID</name>
-        <type>String</type>
-        <format/>
-        <currency/>
-        <decimal/>
-        <group/>
-        <length>-1</length>
-        <precision>-1</precision>
-        <trim_type>none</trim_type>
-      </field>
-      <field>
-        <name>OrderID</name>
-        <type>String</type>
-        <format/>
-        <currency/>
-        <decimal/>
-        <group/>
-        <length>-1</length>
-        <precision>-1</precision>
-        <trim_type>none</trim_type>
-      </field>
-      <field>
-        <name>ReturnDate</name>
+        <name>OrderDate</name>
         <type>Date</type>
         <format>yyyy-MM-dd</format>
         <currency/>
@@ -616,28 +856,6 @@
         <group/>
         <length>-1</length>
         <precision>-1</precision>
-        <trim_type>none</trim_type>
-      </field>
-      <field>
-        <name>ReturnReason</name>
-        <type>String</type>
-        <format/>
-        <currency/>
-        <decimal/>
-        <group/>
-        <length>-1</length>
-        <precision>-1</precision>
-        <trim_type>both</trim_type>
-      </field>
-      <field>
-        <name>RefundAmount</name>
-        <type>Number</type>
-        <format/>
-        <currency/>
-        <decimal/>
-        <group/>
-        <length>-1</length>
-        <precision>2</precision>
         <trim_type>none</trim_type>
       </field>
     </fields>
@@ -650,8 +868,85 @@
       </output>
     </remotesteps>
     <GUI>
-      <xloc>120</xloc>
-      <yloc>100</yloc>
+      <xloc>80</xloc>
+      <yloc>80</yloc>
+      <draw>Y</draw>
+    </GUI>
+  </step>
+  <step>
+    <name>Sort Order Dates</name>
+    <type>SortRows</type>
+    <description/>
+    <distribute>Y</distribute>
+    <custom_distribution/>
+    <copies>1</copies>
+    <partitioning>
+      <method>none</method>
+      <schema_name/>
+    </partitioning>
+    <directory>${java.io.tmpdir}</directory>
+    <prefix>sort_tmp</prefix>
+    <sort_size>1000000</sort_size>
+    <free_memory>20</free_memory>
+    <compress>N</compress>
+    <compress_variable/>
+    <unique_rows>N</unique_rows>
+    <fields>
+      <field>
+        <name>OrderDate</name>
+        <ascending>Y</ascending>
+        <case_sensitive>N</case_sensitive>
+        <collator_enabled>N</collator_enabled>
+        <collator_strength>0</collator_strength>
+        <presorted>N</presorted>
+      </field>
+    </fields>
+    <attributes/>
+    <cluster_schema/>
+    <remotesteps>
+      <input>
+      </input>
+      <output>
+      </output>
+    </remotesteps>
+    <GUI>
+      <xloc>240</xloc>
+      <yloc>80</yloc>
+      <draw>Y</draw>
+    </GUI>
+  </step>
+  <step>
+    <name>Unique Order Dates</name>
+    <type>Unique</type>
+    <description/>
+    <distribute>Y</distribute>
+    <custom_distribution/>
+    <copies>1</copies>
+    <partitioning>
+      <method>none</method>
+      <schema_name/>
+    </partitioning>
+    <count_rows>N</count_rows>
+    <count_field/>
+    <reject_duplicate_row>N</reject_duplicate_row>
+    <error_description/>
+    <fields>
+      <field>
+        <name>OrderDate</name>
+        <case_insensitive>Y</case_insensitive>
+      </field>
+    </fields>
+    <attributes/>
+    <cluster_schema/>
+    <remotesteps>
+      <input>
+      </input>
+      <output>
+      </output>
+    </remotesteps>
+    <GUI>
+      <xloc>400</xloc>
+      <yloc>80</yloc>
       <draw>Y</draw>
     </GUI>
   </step>

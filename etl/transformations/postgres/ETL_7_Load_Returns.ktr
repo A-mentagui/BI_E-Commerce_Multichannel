@@ -459,7 +459,7 @@
       <schema_name/>
     </partitioning>
     <connection>BI</connection>
-    <schema>ecommerce_bi</schema>
+    <schema>public</schema>
     <table>fact_returns</table>
     <commit>1000</commit>
     <truncate>N</truncate>
@@ -527,7 +527,7 @@
     <cache_load_all>N</cache_load_all>
     <cache_size>0</cache_size>
     <lookup>
-      <schema>ecommerce_bi</schema>
+      <schema>public</schema>
       <table>fact_orders</table>
       <orderby/>
       <fail_on_multiple>N</fail_on_multiple>

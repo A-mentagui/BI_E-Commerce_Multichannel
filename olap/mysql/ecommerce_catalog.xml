@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- MySQL-Optimized OLAP Catalog for E-Commerce BI -->
+<!-- Database: ecommerce_bi -->
+<!-- Dialect: MySQL 5.7+ / 8.0+ -->
+<!-- Configuration: Use with olap/mondrian.properties (MySQL settings) -->
+<Schema name="EcommerceBIOLAP">
+  <Cube name="SalesCube" visible="true" defaultMeasure="Revenue" cache="true" enabled="true">
+    <Table name="`vw_fact_orders_olap`">
+    </Table>
+    <Dimension type="TimeDimension" visible="true" foreignKey="timekey" highCardinality="false" name="Time">
+      <Hierarchy name="TimeHierarchy" visible="true" hasAll="true" allMemberName="All Time">
+        <Table name="`dim_time`">
+        </Table>
+        <Level name="Year" visible="true" column="year" type="Numeric" uniqueMembers="false" levelType="TimeYears" hideMemberIf="Never">
+        </Level>
+        <Level name="Quarter" visible="true" column="quarter" type="Numeric" uniqueMembers="false" levelType="TimeQuarters" hideMemberIf="Never">
+        </Level>
+        <Level name="Month" visible="true" column="monthname" type="String" uniqueMembers="false" levelType="TimeMonths" hideMemberIf="Never">
+        </Level>
+        <Level name="Day" visible="true" column="dayofweek" type="Numeric" uniqueMembers="false" levelType="TimeDays" hideMemberIf="Never">
+        </Level>
+      </Hierarchy>
+    </Dimension>
+    <Dimension visible="true" foreignKey="productkey" highCardinality="false" name="Product">
+      <Hierarchy name="ProductHierarchy" visible="true" hasAll="true" allMemberName="All Products" primaryKey="productkey">
+        <Table name="`dim_product`">
+        </Table>
+        <Level name="Category" visible="true" column="category" type="String" uniqueMembers="false" levelType="Regular" hideMemberIf="Never">
+        </Level>
+        <Level name="SubCategory" visible="true" column="subcategory" type="String" uniqueMembers="false" levelType="Regular" hideMemberIf="Never">
+        </Level>
+        <Level name="Product" visible="true" column="productname" type="String" uniqueMembers="true" levelType="Regular" hideMemberIf="Never">
+        </Level>
+      </Hierarchy>
+    </Dimension>
+    <Dimension visible="true" foreignKey="channelkey" highCardinality="false" name="Channel">
+      <Hierarchy name="ChannelHierarchy" visible="true" hasAll="true" allMemberName="All Channels" primaryKey="channelkey">
+        <Table name="`dim_channel`">
+        </Table>
+        <Level name="ChannelType" visible="true" column="channeltype" type="String" uniqueMembers="false" levelType="Regular" hideMemberIf="Never">
+        </Level>
+        <Level name="Channel" visible="true" column="channelname" type="String" uniqueMembers="true" levelType="Regular" hideMemberIf="Never">
+        </Level>
+      </Hierarchy>
+    </Dimension>
+    <Dimension visible="true" foreignKey="customerkey" highCardinality="false" name="Customer">
+      <Hierarchy name="CustomerHierarchy" visible="true" hasAll="true" allMemberName="All Customers" primaryKey="customerkey">
+        <Table name="`dim_customer`">
+        </Table>
+        <Level name="Segment" visible="true" column="segment" type="String" uniqueMembers="false" levelType="Regular" hideMemberIf="Never">
+        </Level>
+        <Level name="Country" visible="true" column="country" type="String" uniqueMembers="false" levelType="Regular" hideMemberIf="Never">
+        </Level>
+        <Level name="City" visible="true" column="city" type="String" uniqueMembers="false" levelType="Regular" hideMemberIf="Never">
+        </Level>
+        <Level name="Customer" visible="true" column="customername" type="String" uniqueMembers="false" levelType="Regular" hideMemberIf="Never">
+        </Level>
+      </Hierarchy>
+    </Dimension>
+    <Dimension visible="true" foreignKey="regionkey" highCardinality="false" name="Region">
+      <Hierarchy name="RegionHierarchy" visible="true" hasAll="true" allMemberName="All Regions" primaryKey="regionkey">
+        <Table name="`dim_region`">
+        </Table>
+        <Level name="Region" visible="true" column="regionname" type="String" uniqueMembers="true" levelType="Regular" hideMemberIf="Never">
+        </Level>
+      </Hierarchy>
+    </Dimension>
+    <Dimension visible="true" foreignKey="deliverykey" highCardinality="false" name="Delivery">
+      <Hierarchy name="DeliveryHierarchy" visible="true" hasAll="true" allMemberName="All Delivery" primaryKey="deliverykey">
+        <Table name="`dim_delivery`">
+        </Table>
+        <Level name="Delivery" visible="true" column="deliverymethod" type="String" uniqueMembers="true" levelType="Regular" hideMemberIf="Never">
+        </Level>
+      </Hierarchy>
+    </Dimension>
+    <Measure name="Revenue" column="revenue" formatString="#,##0.00" aggregator="sum">
+    </Measure>
+    <Measure name="Quantity" column="quantity" formatString="#,##0" aggregator="sum">
+    </Measure>
+    <Measure name="UnitPrice" column="unitprice" formatString="#,##0.00" aggregator="avg">
+    </Measure>
+    <Measure name="Discount" column="discount" formatString="#,##0.00" aggregator="sum">
+    </Measure>
+    <Measure name="Order_Count" column="order_id" formatString="#,##0" aggregator="count">
+    </Measure>
+    <Measure name="Return_Count" column="return_count" formatString="#,##0" aggregator="sum">
+    </Measure>
+    <Measure name="Refund_Amount" column="refund_amount" formatString="#,##0.00" aggregator="sum">
+    </Measure>
+    <Measure name="Feedback_Count" column="feedback_count" formatString="#,##0" aggregator="sum">
+    </Measure>
+    <Measure name="Satisfaction_Sum" column="satisfaction_sum" formatString="#,##0.0" aggregator="sum">
+    </Measure>
+    <Measure name="Unique_Customers" column="customerkey" formatString="#,##0" aggregator="distinct-count">
+    </Measure>
+    <CalculatedMember name="Satisfaction" formatString="#,##0.0" formula="IIF([Measures].[Feedback_Count] = 0, NULL, [Measures].[Satisfaction_Sum] / [Measures].[Feedback_Count])" dimension="Measures">
+    </CalculatedMember>
+    <CalculatedMember name="Avg_Basket" formatString="#,##0.00" formula="IIF([Measures].[Order_Count] = 0, NULL, [Measures].[Revenue] / [Measures].[Order_Count])" dimension="Measures">
+    </CalculatedMember>
+    <CalculatedMember name="Discount_Rate_Pct" formatString="#,##0.00" formula="IIF([Measures].[Revenue] = 0, NULL, ([Measures].[Discount] / [Measures].[Revenue]) * 100)" dimension="Measures">
+    </CalculatedMember>
+    <CalculatedMember name="Return_Rate_Pct" formatString="#,##0.00" formula="IIF([Measures].[Order_Count] = 0, NULL, ([Measures].[Return_Count] / [Measures].[Order_Count]) * 100)" dimension="Measures">
+    </CalculatedMember>
+    <CalculatedMember name="Net_Revenue" formatString="#,##0.00" formula="[Measures].[Revenue] - [Measures].[Refund_Amount]" dimension="Measures">
+    </CalculatedMember>
+    <NamedSet name="Top10ProductsByRevenue" formula="TopCount([Product].[ProductHierarchy].[Product].Members, 10, [Measures].[Revenue])">
+    </NamedSet>
+    <NamedSet name="TopRegionsByRevenue" formula="TopCount([Region].[RegionHierarchy].[Region].Members, 5, [Measures].[Revenue])">
+    </NamedSet>
+  </Cube>
+</Schema>
+<!-- MySQL Configuration Notes:
+  - All table and view names use MySQL backtick quoting for compatibility
+  - Connection string: jdbc:mysql://localhost:3306/ecommerce_bi?useSSL=false&serverTimezone=UTC
+  - Driver: com.mysql.cj.jdbc.Driver (MySQL Connector/J 8.0+)
+  - OLAP Database: ecommerce_bi
+  - For PostgreSQL version, use olap/postgres/saiku-datasource-postgres.properties
+  - Ensure all dimension and fact tables exist in the ecommerce_bi database
+  - Test catalog validation: mondrian.schema.validate=true in mondrian.properties
+-->

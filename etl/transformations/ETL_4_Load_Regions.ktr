@@ -454,7 +454,7 @@
       <schema_name/>
     </partitioning>
     <connection>BI</connection>
-    <schema>public</schema>
+    <schema>ecommerce_bi</schema>
     <table>dim_region</table>
     <commit>1000</commit>
     <truncate>N</truncate>

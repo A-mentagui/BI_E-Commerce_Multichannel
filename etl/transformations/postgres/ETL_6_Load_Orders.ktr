@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <transformation>
   <info>
-    <name>ETL_7_Load_Returns</name>
-    <description>PDI 11 compatible shell for FACT_RETURNS load with FACT_ORDERS lookup</description>
+    <name>ETL_6_Load_Orders</name>
+    <description>PDI 11 compatible shell for FACT_ORDERS load with dimension lookups</description>
     <extended_description/>
     <trans_version/>
     <trans_type>Normal</trans_type>
@@ -427,9 +427,9 @@
     <clusterschemas>
     </clusterschemas>
     <created_user/>
-    <created_date>2026/02/16 00:18:10.049</created_date>
+    <created_date>2026/02/16 00:17:00.811</created_date>
     <modified_user/>
-    <modified_date>2026/02/16 00:18:10.049</modified_date>
+    <modified_date>2026/02/16 00:17:00.811</modified_date>
     <key_for_session_key>H4sIAAAAAAAA/wMAAAAAAAAAAAA=</key_for_session_key>
     <is_key_private>N</is_key_private>
   </info>
@@ -437,18 +437,43 @@
   </notepads>
   <order>
     <hop>
-      <from>Read Returns CSV</from>
-      <to>Lookup OrderKey</to>
+      <from>Read Orders CSV</from>
+      <to>Lookup CustomerKey</to>
       <enabled>Y</enabled>
     </hop>
     <hop>
-      <from>Lookup OrderKey</from>
-      <to>Load FACT_RETURNS</to>
+      <from>Lookup CustomerKey</from>
+      <to>Lookup ProductKey</to>
+      <enabled>Y</enabled>
+    </hop>
+    <hop>
+      <from>Lookup ProductKey</from>
+      <to>Lookup ChannelKey</to>
+      <enabled>Y</enabled>
+    </hop>
+    <hop>
+      <from>Lookup ChannelKey</from>
+      <to>Lookup RegionKey</to>
+      <enabled>Y</enabled>
+    </hop>
+    <hop>
+      <from>Lookup RegionKey</from>
+      <to>Lookup DeliveryKey</to>
+      <enabled>Y</enabled>
+    </hop>
+    <hop>
+      <from>Lookup DeliveryKey</from>
+      <to>Lookup TimeKey</to>
+      <enabled>Y</enabled>
+    </hop>
+    <hop>
+      <from>Lookup TimeKey</from>
+      <to>Load FACT_ORDERS</to>
       <enabled>Y</enabled>
     </hop>
   </order>
   <step>
-    <name>Load FACT_RETURNS</name>
+    <name>Load FACT_ORDERS</name>
     <type>TableOutput</type>
     <description/>
     <distribute>Y</distribute>
@@ -459,8 +484,8 @@
       <schema_name/>
     </partitioning>
     <connection>BI</connection>
-    <schema>ecommerce_bi</schema>
-    <table>fact_returns</table>
+    <schema>public</schema>
+    <table>fact_orders</table>
     <commit>1000</commit>
     <truncate>N</truncate>
     <ignore_errors>N</ignore_errors>
@@ -477,24 +502,56 @@
     <return_field/>
     <fields>
       <field>
-        <column_name>returnid</column_name>
-        <stream_name>ReturnID</stream_name>
+        <column_name>orderid</column_name>
+        <stream_name>OrderID</stream_name>
       </field>
       <field>
-        <column_name>orderkey</column_name>
-        <stream_name>OrderKey</stream_name>
+        <column_name>timekey</column_name>
+        <stream_name>TimeKey</stream_name>
       </field>
       <field>
-        <column_name>returndate</column_name>
-        <stream_name>ReturnDate</stream_name>
+        <column_name>productkey</column_name>
+        <stream_name>ProductKey</stream_name>
       </field>
       <field>
-        <column_name>returnreason</column_name>
-        <stream_name>ReturnReason</stream_name>
+        <column_name>channelkey</column_name>
+        <stream_name>ChannelKey</stream_name>
       </field>
       <field>
-        <column_name>refundamount</column_name>
-        <stream_name>RefundAmount</stream_name>
+        <column_name>customerkey</column_name>
+        <stream_name>CustomerKey</stream_name>
+      </field>
+      <field>
+        <column_name>regionkey</column_name>
+        <stream_name>RegionKey</stream_name>
+      </field>
+      <field>
+        <column_name>deliverykey</column_name>
+        <stream_name>DeliveryKey</stream_name>
+      </field>
+      <field>
+        <column_name>revenue</column_name>
+        <stream_name>Revenue</stream_name>
+      </field>
+      <field>
+        <column_name>quantity</column_name>
+        <stream_name>Quantity</stream_name>
+      </field>
+      <field>
+        <column_name>unitprice</column_name>
+        <stream_name>UnitPrice</stream_name>
+      </field>
+      <field>
+        <column_name>discount</column_name>
+        <stream_name>Discount</stream_name>
+      </field>
+      <field>
+        <column_name>orderstatus</column_name>
+        <stream_name>OrderStatus</stream_name>
+      </field>
+      <field>
+        <column_name>orderdate</column_name>
+        <stream_name>OrderDate</stream_name>
       </field>
     </fields>
     <attributes/>
@@ -506,13 +563,13 @@
       </output>
     </remotesteps>
     <GUI>
-      <xloc>640</xloc>
+      <xloc>1260</xloc>
       <yloc>100</yloc>
       <draw>Y</draw>
     </GUI>
   </step>
   <step>
-    <name>Lookup OrderKey</name>
+    <name>Lookup ChannelKey</name>
     <type>DBLookup</type>
     <description/>
     <distribute>Y</distribute>
@@ -527,22 +584,22 @@
     <cache_load_all>N</cache_load_all>
     <cache_size>0</cache_size>
     <lookup>
-      <schema>ecommerce_bi</schema>
-      <table>fact_orders</table>
+      <schema>public</schema>
+      <table>dim_channel</table>
       <orderby/>
       <fail_on_multiple>N</fail_on_multiple>
       <eat_row_on_failure>N</eat_row_on_failure>
       <key>
-        <name>OrderID</name>
-        <field>orderid</field>
+        <name>ChannelID</name>
+        <field>channelid</field>
         <condition>=</condition>
         <name2/>
       </key>
       <value>
-        <name>orderkey</name>
-        <rename>orderkey</rename>
+        <name>channelkey</name>
+        <rename>channelkey</rename>
         <default/>
-        <type>Integer</type>
+        <type>None</type>
       </value>
     </lookup>
     <attributes/>
@@ -554,13 +611,253 @@
       </output>
     </remotesteps>
     <GUI>
-      <xloc>380</xloc>
+      <xloc>620</xloc>
       <yloc>100</yloc>
       <draw>Y</draw>
     </GUI>
   </step>
   <step>
-    <name>Read Returns CSV</name>
+    <name>Lookup CustomerKey</name>
+    <type>DBLookup</type>
+    <description/>
+    <distribute>Y</distribute>
+    <custom_distribution/>
+    <copies>1</copies>
+    <partitioning>
+      <method>none</method>
+      <schema_name/>
+    </partitioning>
+    <connection>BI</connection>
+    <cache>N</cache>
+    <cache_load_all>N</cache_load_all>
+    <cache_size>0</cache_size>
+    <lookup>
+      <schema>public</schema>
+      <table>dim_customer</table>
+      <orderby/>
+      <fail_on_multiple>N</fail_on_multiple>
+      <eat_row_on_failure>N</eat_row_on_failure>
+      <key>
+        <name>CustomerID</name>
+        <field>customerid</field>
+        <condition>=</condition>
+        <name2/>
+      </key>
+      <value>
+        <name>customerkey</name>
+        <rename>customerkey</rename>
+        <default/>
+        <type>String</type>
+      </value>
+    </lookup>
+    <attributes/>
+    <cluster_schema/>
+    <remotesteps>
+      <input>
+      </input>
+      <output>
+      </output>
+    </remotesteps>
+    <GUI>
+      <xloc>300</xloc>
+      <yloc>100</yloc>
+      <draw>Y</draw>
+    </GUI>
+  </step>
+  <step>
+    <name>Lookup DeliveryKey</name>
+    <type>DBLookup</type>
+    <description/>
+    <distribute>Y</distribute>
+    <custom_distribution/>
+    <copies>1</copies>
+    <partitioning>
+      <method>none</method>
+      <schema_name/>
+    </partitioning>
+    <connection>BI</connection>
+    <cache>N</cache>
+    <cache_load_all>N</cache_load_all>
+    <cache_size>0</cache_size>
+    <lookup>
+      <schema>public</schema>
+      <table>dim_delivery</table>
+      <orderby/>
+      <fail_on_multiple>N</fail_on_multiple>
+      <eat_row_on_failure>N</eat_row_on_failure>
+      <key>
+        <name>DeliveryMethod</name>
+        <field>deliverymethod</field>
+        <condition>=</condition>
+        <name2/>
+      </key>
+      <value>
+        <name>deliverykey</name>
+        <rename>deliverykey</rename>
+        <default/>
+        <type>None</type>
+      </value>
+    </lookup>
+    <attributes/>
+    <cluster_schema/>
+    <remotesteps>
+      <input>
+      </input>
+      <output>
+      </output>
+    </remotesteps>
+    <GUI>
+      <xloc>940</xloc>
+      <yloc>100</yloc>
+      <draw>Y</draw>
+    </GUI>
+  </step>
+  <step>
+    <name>Lookup ProductKey</name>
+    <type>DBLookup</type>
+    <description/>
+    <distribute>Y</distribute>
+    <custom_distribution/>
+    <copies>1</copies>
+    <partitioning>
+      <method>none</method>
+      <schema_name/>
+    </partitioning>
+    <connection>BI</connection>
+    <cache>N</cache>
+    <cache_load_all>N</cache_load_all>
+    <cache_size>0</cache_size>
+    <lookup>
+      <schema>public</schema>
+      <table>dim_product</table>
+      <orderby/>
+      <fail_on_multiple>N</fail_on_multiple>
+      <eat_row_on_failure>N</eat_row_on_failure>
+      <key>
+        <name>ProductID</name>
+        <field>productid</field>
+        <condition>=</condition>
+        <name2/>
+      </key>
+      <value>
+        <name>productkey</name>
+        <rename>productkey</rename>
+        <default/>
+        <type>None</type>
+      </value>
+    </lookup>
+    <attributes/>
+    <cluster_schema/>
+    <remotesteps>
+      <input>
+      </input>
+      <output>
+      </output>
+    </remotesteps>
+    <GUI>
+      <xloc>460</xloc>
+      <yloc>100</yloc>
+      <draw>Y</draw>
+    </GUI>
+  </step>
+  <step>
+    <name>Lookup RegionKey</name>
+    <type>DBLookup</type>
+    <description/>
+    <distribute>Y</distribute>
+    <custom_distribution/>
+    <copies>1</copies>
+    <partitioning>
+      <method>none</method>
+      <schema_name/>
+    </partitioning>
+    <connection>BI</connection>
+    <cache>N</cache>
+    <cache_load_all>N</cache_load_all>
+    <cache_size>0</cache_size>
+    <lookup>
+      <schema>public</schema>
+      <table>dim_region</table>
+      <orderby/>
+      <fail_on_multiple>N</fail_on_multiple>
+      <eat_row_on_failure>N</eat_row_on_failure>
+      <key>
+        <name>RegionID</name>
+        <field>regionid</field>
+        <condition>=</condition>
+        <name2/>
+      </key>
+      <value>
+        <name>regionkey</name>
+        <rename>regionkey</rename>
+        <default/>
+        <type>None</type>
+      </value>
+    </lookup>
+    <attributes/>
+    <cluster_schema/>
+    <remotesteps>
+      <input>
+      </input>
+      <output>
+      </output>
+    </remotesteps>
+    <GUI>
+      <xloc>780</xloc>
+      <yloc>100</yloc>
+      <draw>Y</draw>
+    </GUI>
+  </step>
+  <step>
+    <name>Lookup TimeKey</name>
+    <type>DBLookup</type>
+    <description/>
+    <distribute>Y</distribute>
+    <custom_distribution/>
+    <copies>1</copies>
+    <partitioning>
+      <method>none</method>
+      <schema_name/>
+    </partitioning>
+    <connection>BI</connection>
+    <cache>N</cache>
+    <cache_load_all>N</cache_load_all>
+    <cache_size>0</cache_size>
+    <lookup>
+      <schema>public</schema>
+      <table>dim_time</table>
+      <orderby/>
+      <fail_on_multiple>N</fail_on_multiple>
+      <eat_row_on_failure>N</eat_row_on_failure>
+      <key>
+        <name>OrderDate</name>
+        <field>fulldate</field>
+        <condition>=</condition>
+        <name2/>
+      </key>
+      <value>
+        <name>timekey</name>
+        <rename>timekey</rename>
+        <default/>
+        <type>None</type>
+      </value>
+    </lookup>
+    <attributes/>
+    <cluster_schema/>
+    <remotesteps>
+      <input>
+      </input>
+      <output>
+      </output>
+    </remotesteps>
+    <GUI>
+      <xloc>1104</xloc>
+      <yloc>48</yloc>
+      <draw>Y</draw>
+    </GUI>
+  </step>
+  <step>
+    <name>Read Orders CSV</name>
     <type>CsvInput</type>
     <description/>
     <distribute>Y</distribute>
@@ -570,7 +867,7 @@
       <method>none</method>
       <schema_name/>
     </partitioning>
-    <filename>${Internal.Transformation.Filename.Directory}/../../data/raw/returns.csv</filename>
+    <filename>${Internal.Transformation.Filename.Directory}/../../data/raw/orders.csv</filename>
     <filename_field/>
     <rownum_field/>
     <include_filename>N</include_filename>
@@ -586,17 +883,6 @@
     <encoding>UTF-8</encoding>
     <fields>
       <field>
-        <name>ReturnID</name>
-        <type>String</type>
-        <format/>
-        <currency/>
-        <decimal/>
-        <group/>
-        <length>-1</length>
-        <precision>-1</precision>
-        <trim_type>none</trim_type>
-      </field>
-      <field>
         <name>OrderID</name>
         <type>String</type>
         <format/>
@@ -608,7 +894,51 @@
         <trim_type>none</trim_type>
       </field>
       <field>
-        <name>ReturnDate</name>
+        <name>CustomerID</name>
+        <type>String</type>
+        <format/>
+        <currency/>
+        <decimal/>
+        <group/>
+        <length>-1</length>
+        <precision>-1</precision>
+        <trim_type>none</trim_type>
+      </field>
+      <field>
+        <name>ProductID</name>
+        <type>String</type>
+        <format/>
+        <currency/>
+        <decimal/>
+        <group/>
+        <length>-1</length>
+        <precision>-1</precision>
+        <trim_type>none</trim_type>
+      </field>
+      <field>
+        <name>ChannelID</name>
+        <type>String</type>
+        <format/>
+        <currency/>
+        <decimal/>
+        <group/>
+        <length>-1</length>
+        <precision>-1</precision>
+        <trim_type>none</trim_type>
+      </field>
+      <field>
+        <name>RegionID</name>
+        <type>String</type>
+        <format/>
+        <currency/>
+        <decimal/>
+        <group/>
+        <length>-1</length>
+        <precision>-1</precision>
+        <trim_type>none</trim_type>
+      </field>
+      <field>
+        <name>OrderDate</name>
         <type>Date</type>
         <format>yyyy-MM-dd</format>
         <currency/>
@@ -619,7 +949,51 @@
         <trim_type>none</trim_type>
       </field>
       <field>
-        <name>ReturnReason</name>
+        <name>Quantity</name>
+        <type>Integer</type>
+        <format/>
+        <currency/>
+        <decimal/>
+        <group/>
+        <length>-1</length>
+        <precision>0</precision>
+        <trim_type>none</trim_type>
+      </field>
+      <field>
+        <name>UnitPrice</name>
+        <type>Number</type>
+        <format/>
+        <currency/>
+        <decimal/>
+        <group/>
+        <length>-1</length>
+        <precision>2</precision>
+        <trim_type>none</trim_type>
+      </field>
+      <field>
+        <name>Revenue</name>
+        <type>Number</type>
+        <format/>
+        <currency/>
+        <decimal/>
+        <group/>
+        <length>-1</length>
+        <precision>2</precision>
+        <trim_type>none</trim_type>
+      </field>
+      <field>
+        <name>Discount</name>
+        <type>Number</type>
+        <format/>
+        <currency/>
+        <decimal/>
+        <group/>
+        <length>-1</length>
+        <precision>2</precision>
+        <trim_type>none</trim_type>
+      </field>
+      <field>
+        <name>DeliveryMethod</name>
         <type>String</type>
         <format/>
         <currency/>
@@ -630,15 +1004,15 @@
         <trim_type>both</trim_type>
       </field>
       <field>
-        <name>RefundAmount</name>
-        <type>Number</type>
+        <name>OrderStatus</name>
+        <type>String</type>
         <format/>
         <currency/>
         <decimal/>
         <group/>
         <length>-1</length>
-        <precision>2</precision>
-        <trim_type>none</trim_type>
+        <precision>-1</precision>
+        <trim_type>both</trim_type>
       </field>
     </fields>
     <attributes/>
